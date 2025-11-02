@@ -10,6 +10,21 @@ This diagram illustrates the architecture and data flow of the Sitech Performanc
 
 ![Sitech Architecture](images/architecture_diagram.png)
 
+## 📸 Project Screenshots
+
+Below are some screenshots from the **Sitech Performance Tracking System** demonstrating the dashboard, assignments, and performance tracking features.
+
+| Dashboard | Assignments | Performance |
+|------------|--------------|--------------|
+| ![Dashboard](.browser_screenshots/screenshot_20251102_133053_115509.png) | ![Assignments](.browser_screenshots/screenshot_20251102_133102_693451.png) | ![Performance](.browser_screenshots/screenshot_20251102_133215_987236.png) |
+
+| Student Progress | Manager View | Chart View |
+|------------------|---------------|-------------|
+| ![Student Progress](.browser_screenshots/screenshot_20251102_134327_883891.png) | ![Manager View](.browser_screenshots/screenshot_20251102_140734_946341.png) | ![Chart View](.browser_screenshots/screenshot_20251102_145803_538860.png) |
+
+> 💡 You can explore more screenshots inside the folder:  
+> `.browser_screenshots/` for detailed views of every page and feature.
+
 
 
 ## 🚀 Features
