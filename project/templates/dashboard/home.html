@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - EduDash{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <!-- Header -->
+        <div class="glass-effect shadow-2xl rounded-3xl p-8 hover-lift">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div class="flex items-center space-x-6">
+                    <div class="w-20 h-20 gradient-bg rounded-2xl flex items-center justify-center shadow-xl">
+                        {% if user.is_admin %}
+                            <i class="fas fa-crown text-white text-2xl"></i>
+                        {% elif user.is_manager %}
+                            <i class="fas fa-user-tie text-white text-2xl"></i>
+                        {% else %}
+                            <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold text-gradient mb-2">
+                            Welcome back, {{ user.get_full_name|default:user.username }}!
+                        </h1>
+                        <p class="text-xl text-gray-600 font-medium">{{ user.get_role_display }} Dashboard</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <i class="fas fa-calendar mr-2"></i>
+                            {% now "l, F j, Y" %}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    {% if user.is_admin or user.is_manager %}
+                    <a href="{% url 'assignments:create' %}" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>New Assignment
+                    </a>
+                    {% endif %}
+                    {% if user.is_admin %}
+                    <div class="flex gap-2">
+                        <a href="{% url 'dashboard:export_students' %}" class="bg-white text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg border border-gray-200">
+                            <i class="fas fa-download mr-2"></i>Export Students
+                        </a>
+                        <a href="{% url 'dashboard:export_assignments' %}" class="bg-white text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg border border-gray-200">
+                            <i class="fas fa-download mr-2"></i>Export Assignments
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        {% if user.is_admin %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass-effect rounded-2xl p-6 hover-lift shadow-xl">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-users text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Total Users</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ total_users }}</p>
+                        <p class="text-xs text-green-600 font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i>+12% from last month
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+            <div class="glass-effect rounded-2xl p-6 hover-lift shadow-xl">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-user-graduate text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Students</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ total_students }}</p>
+                        <p class="text-xs text-green-600 font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i>+8% from last month
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 hover-lift shadow-xl">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-tasks text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Total Assignments</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ total_assignments }}</p>
+                        <p class="text-xs text-blue-600 font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i>+5% from last month
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-2xl p-6 hover-lift shadow-xl">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-clock text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Pending Submissions</p>
+                        <p class="text-3xl font-bold text-gray-900">{{ pending_submissions }}</p>
+                        <p class="text-xs text-orange-600 font-medium">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Needs attention
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elif user.is_manager %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-user-graduate text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">My Students</dt>
+                            <dd class="stat-number">{{ my_students_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-tasks text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">My Assignments</dt>
+                            <dd class="stat-number">{{ my_assignments_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-2xl text-purple-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Active Assignments</dt>
+                            <dd class="stat-number">{{ active_assignments_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Pending Reviews</dt>
+                            <dd class="stat-number">{{ pending_submissions }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif user.is_student %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-tasks text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Total Assignments</dt>
+                            <dd class="stat-number">{{ total_assignments }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Completed</dt>
+                            <dd class="stat-number">{{ completed_assignments }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Pending</dt>
+                            <dd class="stat-number">{{ pending_assignments }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-card-body">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-star text-2xl text-purple-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="stat-label">Average Grade</dt>
+                            <dd class="stat-number">{{ average_grade|floatformat:1 }}%</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Charts and Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-lg font-medium text-gray-900">
+                    {% if user.is_admin %}Performance Overview{% elif user.is_manager %}Student Performance{% else %}My Progress{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="flow-root">
+                    <ul class="-mb-8">
+                        {% if user.is_student %}
+                            {% for submission in recent_submissions %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-file-alt text-white text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500">
+                                                    Submitted <a href="{% url 'assignments:detail' submission.assignment.pk %}" class="font-medium text-gray-900">{{ submission.assignment.title }}</a>
+                                                </p>
+                                            </div>
+                                            <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                {{ submission.submitted_at|timesince }} ago
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="text-center text-gray-500 py-4">No recent submissions</li>
+                            {% endfor %}
+                        {% else %}
+                            {% for submission in recent_submissions %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-user text-white text-sm"></i>
+                                            </span>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500">
+                                                    <span class="font-medium text-gray-900">{{ submission.student.get_full_name }}</span> submitted 
+                                                    <a href="{% url 'assignments:detail' submission.assignment.pk %}" class="font-medium text-gray-900">{{ submission.assignment.title }}</a>
+                                                </p>
+                                            </div>
+                                            <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                {{ submission.submitted_at|timesince }} ago
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="text-center text-gray-500 py-4">No recent submissions</li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional sections for students -->
+    {% if user.is_student %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-medium text-gray-900">Upcoming Assignments</h3>
+        </div>
+        <div class="card-body">
+            {% if upcoming_assignments %}
+            <div class="space-y-4">
+                {% for assignment in upcoming_assignments %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="font-medium text-gray-900">
+                            <a href="{% url 'assignments:detail' assignment.pk %}" class="hover:text-blue-600">
+                                {{ assignment.title }}
+                            </a>
+                        </h4>
+                        <p class="text-sm text-gray-500">Due: {{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="badge priority-{{ assignment.priority }}">{{ assignment.get_priority_display }}</span>
+                        <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-primary btn-sm">View</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-center text-gray-500 py-4">No upcoming assignments</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch dashboard stats and create chart
+    fetch('{% url "dashboard:stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            {% if user.is_admin %}
+            // Admin chart - Grade distribution
+            if (data.grade_distribution) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.grade_distribution.map(item => item.letter_grade || 'Ungraded'),
+                        datasets: [{
+                            data: data.grade_distribution.map(item => item.count),
+                            backgroundColor: [
+                                '#10B981', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Grade Distribution'
+                            }
+                        }
+                    }
+                });
+            }
+            {% elif user.is_manager %}
+            // Manager chart - Student performance
+            if (data.student_performance) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.student_performance.map(item => item.submission__student__username),
+                        datasets: [{
+                            label: 'Average Score',
+                            data: data.student_performance.map(item => item.avg_score),
+                            backgroundColor: '#3B82F6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Top Student Performance'
+                            }
+                        }
+                    }
+                });
+            }
+            {% elif user.is_student %}
+            // Student chart - Grade progression
+            if (data.my_grades) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.my_grades.map(item => item.submission__assignment__title),
+                        datasets: [{
+                            label: 'Score',
+                            data: data.my_grades.map(item => item.score),
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Grade Progression'
+                            }
+                        }
+                    }
+                });
+            }
+            {% endif %}
+        })
+        .catch(error => {
+            console.error('Error fetching dashboard stats:', error);
+            // Show a simple message in the chart area
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Chart data unavailable', ctx.canvas.width/2, ctx.canvas.height/2);
+        });
+});
+</script>
+{% endblock %}

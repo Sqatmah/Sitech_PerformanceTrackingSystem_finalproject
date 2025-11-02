@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+
+{% block title %}Assignments - EduDash{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <!-- Header -->
+        <div class="glass-effect shadow-2xl rounded-3xl p-8 hover-lift">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div class="flex items-center space-x-6">
+                    <div class="w-20 h-20 gradient-bg rounded-2xl flex items-center justify-center shadow-xl">
+                        <i class="fas fa-tasks text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold text-gradient mb-2">Assignments</h1>
+                        <p class="text-xl text-gray-600 font-medium">
+                            {% if user.is_admin %}
+                                Manage all assignments across the platform
+                            {% elif user.is_manager %}
+                                Manage your created assignments
+                            {% else %}
+                                View your assigned tasks and submissions
+                            {% endif %}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <i class="fas fa-list mr-2"></i>
+                            {{ assignments.count }} assignment{{ assignments.count|pluralize }} available
+                        </p>
+                    </div>
+                </div>
+                {% if user.is_admin or user.is_manager %}
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="{% url 'assignments:create' %}" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>New Assignment
+                    </a>
+                    <a href="#" class="bg-white text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg border border-gray-200">
+                        <i class="fas fa-download mr-2"></i>Export
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass-effect shadow-xl rounded-2xl p-6 hover-lift">
+            <div class="flex items-center mb-6">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
+                    <i class="fas fa-filter text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">Filter & Search</h3>
+            </div>
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="md:col-span-2">
+                    <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-search mr-2 text-purple-500"></i>Search Assignments
+                    </label>
+                    <div class="relative">
+                        <input type="text" 
+                               id="search" 
+                               name="search" 
+                               value="{{ request.GET.search }}"
+                               placeholder="Search by title, description..."
+                               class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white shadow-sm">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div>
+                    <label for="priority" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-exclamation-triangle mr-2 text-orange-500"></i>Priority
+                    </label>
+                    <select id="priority" name="priority" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white shadow-sm">
+                        <option value="">🎯 All Priorities</option>
+                        <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>🟢 Low</option>
+                        <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                        <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>🔴 High</option>
+                </select>
+            </div>
+                <div>
+                    <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-toggle-on mr-2 text-green-500"></i>Status
+                    </label>
+                    <select id="status" name="status" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white shadow-sm">
+                        <option value="">📋 All Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>✅ Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>❌ Inactive</option>
+                    </select>
+                </div>
+                <div class="flex items-end gap-3">
+                    <button type="submit" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg">
+                        <i class="fas fa-search mr-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'assignments:list' %}" class="bg-white text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 hover-lift shadow-lg border border-gray-200">
+                        <i class="fas fa-times mr-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Assignments List -->
+        <div class="glass-effect shadow-xl rounded-2xl overflow-hidden hover-lift">
+            {% if page_obj %}
+            <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600">
+                <h3 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-list mr-3"></i>
+                    All Assignments ({{ page_obj.paginator.count }})
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-file-alt mr-2"></i>Assignment
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Priority
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-2"></i>Due Date
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-star mr-2"></i>Max Score
+                            </th>
+                            {% if user.is_student %}
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-check-circle mr-2"></i>Status
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-trophy mr-2"></i>Grade
+                            </th>
+                            {% else %}
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-paper-plane mr-2"></i>Submissions
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-user mr-2"></i>Created By
+                            </th>
+                            {% endif %}
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-2"></i>Actions
+                            </th>
+                        </tr>
+                    </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for assignment in page_obj %}
+                    <tr class="hover:bg-gray-50">
+                        <td>
+                            <div>
+                                <div class="font-medium text-gray-900">
+                                    <a href="{% url 'assignments:detail' assignment.pk %}" class="hover:text-blue-600">
+                                        {{ assignment.title }}
+                                    </a>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ assignment.description|truncatewords:10 }}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge priority-{{ assignment.priority }}">
+                                {{ assignment.get_priority_display }}
+                            </span>
+                        </td>
+                        <td class="text-sm text-gray-900">
+                            {{ assignment.due_date|date:"M d, Y H:i" }}
+                            {% if assignment.is_overdue %}
+                            <span class="text-red-600 text-xs block">Overdue</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-sm text-gray-900">
+                            {{ assignment.max_score }} pts
+                        </td>
+                        {% if user.is_student %}
+                        <td>
+                            {% for submission in assignment.submissions.all %}
+                                {% if submission.student == user %}
+                                    <span class="badge status-{{ submission.status }}">
+                                        {{ submission.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            {% empty %}
+                                <span class="badge badge-secondary">Not Submitted</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for submission in assignment.submissions.all %}
+                                {% if submission.student == user %}
+                                    {% if submission.grade %}
+                                        <span class="font-medium text-gray-900">
+                                            {{ submission.grade.score }}/{{ assignment.max_score }}
+                                        </span>
+                                        <span class="text-sm text-gray-500">
+                                            ({{ submission.grade.get_letter_grade }})
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% empty %}
+                                <span class="text-gray-400">-</span>
+                            {% endfor %}
+                        </td>
+                        {% else %}
+                        <td class="text-sm text-gray-900">
+                            {{ assignment.submissions.count }} submitted
+                        </td>
+                        <td class="text-sm text-gray-900">
+                            {{ assignment.created_by.get_full_name|default:assignment.created_by.username }}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'assignments:detail' assignment.pk %}" 
+                                   class="text-blue-600 hover:text-blue-900 text-sm">
+                                    View
+                                </a>
+                                {% if user.is_admin or user.is_manager and assignment.created_by == user %}
+                                <a href="{% url 'assignments:update' assignment.pk %}" 
+                                   class="text-green-600 hover:text-green-900 text-sm">
+                                    Edit
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing
+                        <span class="font-medium">{{ page_obj.start_index }}</span>
+                        to
+                        <span class="font-medium">{{ page_obj.end_index }}</span>
+                        of
+                        <span class="font-medium">{{ paginator.count }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                            {{ num }}
+                        </span>
+                        {% else %}
+                        <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-tasks text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
+            <p class="text-gray-500 mb-4">
+                {% if user.is_admin or user.is_manager %}
+                    Get started by creating your first assignment.
+                {% else %}
+                    No assignments have been assigned to you yet.
+                {% endif %}
+            </p>
+            {% if user.is_admin or user.is_manager %}
+            <a href="{% url 'assignments:create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Create Assignment
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

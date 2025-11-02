@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Submission Details - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                    <h1 class="text-2xl font-bold text-gray-900">Submission Details</h1>
+                    {% if submission.grade %}
+                        <span class="badge badge-green">Graded</span>
+                    {% else %}
+                        <span class="badge badge-yellow">Pending Review</span>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-6 text-sm text-gray-600">
+                    <div class="flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        Student: {{ submission.student.get_full_name|default:submission.student.username }}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar mr-2"></i>
+                        Submitted: {{ submission.submitted_at|date:"M d, Y H:i" }}
+                    </div>
+                    {% if submission.grade %}
+                    <div class="flex items-center">
+                        <i class="fas fa-star mr-2"></i>
+                        Grade: {{ submission.grade }}/{{ submission.assignment.max_score }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'assignments:detail' submission.assignment.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assignment
+                </a>
+                {% if user.is_student and user == submission.student and not submission.grade %}
+                <a href="{% url 'submissions:update' submission.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i>Edit Submission
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Assignment Info -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Assignment</h2>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-900">{{ submission.assignment.title }}</h3>
+                        <p class="text-sm text-gray-600">Due: {{ submission.assignment.due_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="badge badge-{{ submission.assignment.priority }}">{{ submission.assignment.get_priority_display }}</span>
+                        <span class="badge badge-{{ submission.assignment.status }}">{{ submission.assignment.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submission Content -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Submission Content</h2>
+                <div class="prose max-w-none">
+                    {{ submission.content|linebreaks }}
+                </div>
+                
+                {% if submission.attachment %}
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-md font-medium text-gray-900 mb-2">Attachment</h3>
+                    <a href="{{ submission.attachment.url }}" 
+                       class="inline-flex items-center text-blue-600 hover:text-blue-800"
+                       target="_blank">
+                        <i class="fas fa-download mr-2"></i>
+                        Download {{ submission.attachment.name|slice:"10:" }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Grading Section (for managers/admins) -->
+            {% if user.is_admin or user.is_manager %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Grading</h2>
+                
+                {% if not submission.grade %}
+                <form method="post" action="{% url 'submissions:grade' submission.pk %}">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">
+                                Grade (out of {{ submission.assignment.max_score }})
+                            </label>
+                            <input type="number" id="grade" name="grade" 
+                                   min="0" max="{{ submission.assignment.max_score }}" 
+                                   class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="feedback" class="block text-sm font-medium text-gray-700 mb-1">
+                            Feedback
+                        </label>
+                        <textarea id="feedback" name="feedback" rows="4" 
+                                  class="form-textarea" 
+                                  placeholder="Provide feedback to the student..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check mr-2"></i>Submit Grade
+                    </button>
+                </form>
+                {% else %}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                        <div>
+                            <h3 class="font-medium text-green-900">Graded</h3>
+                            <p class="text-sm text-green-700">
+                                Grade: {{ submission.grade }}/{{ submission.assignment.max_score }} 
+                                ({{ submission.grade|floatformat:1 }}%)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Feedback Section -->
+            {% if submission.feedback %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Feedback</h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="prose max-w-none text-gray-700">
+                        {{ submission.feedback|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Submission Stats -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Submission Info</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Status</span>
+                        {% if submission.grade %}
+                            <span class="badge badge-green">Graded</span>
+                        {% else %}
+                            <span class="badge badge-yellow">Pending</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Submitted</span>
+                        <span class="font-medium">{{ submission.submitted_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Time</span>
+                        <span class="font-medium">{{ submission.submitted_at|date:"H:i" }}</span>
+                    </div>
+                    {% if submission.grade %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Grade</span>
+                        <span class="font-medium">{{ submission.grade }}/{{ submission.assignment.max_score }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Percentage</span>
+                        <span class="font-medium">{{ submission.grade|floatformat:1 }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Student Info -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Student</h3>
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                        {% if submission.student.profile.photo %}
+                            <img src="{{ submission.student.profile.photo.url }}" 
+                                 alt="{{ submission.student.get_full_name|default:submission.student.username }}"
+                                 class="w-12 h-12 rounded-full object-cover">
+                        {% else %}
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-medium">
+                                {{ submission.student.first_name.0|default:submission.student.username.0|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">
+                            {{ submission.student.get_full_name|default:submission.student.username }}
+                        </p>
+                        <p class="text-sm text-gray-500">@{{ submission.student.username }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Stats -->
+            {% if user.is_admin or user.is_manager %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assignment Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Submissions</span>
+                        <span class="font-medium">{{ submission.assignment.submissions.count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Graded</span>
+                        <span class="font-medium">{{ graded_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Pending</span>
+                        <span class="font-medium">{{ pending_count }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

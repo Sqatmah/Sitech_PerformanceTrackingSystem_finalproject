@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Dashboard{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/enhanced.css' %}">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
+        .hover-lift { transition: all 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .nav-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .text-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen font-inter">
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="glass-effect shadow-2xl border-b border-white/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'dashboard:home' %}" class="flex items-center space-x-3 hover:scale-105 transition-transform duration-200">
+                            <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+                                <i class="fas fa-graduation-cap text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gradient">EduDash</div>
+                                <div class="text-xs text-gray-500 font-medium">Student Performance</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <div class="hidden md:ml-12 md:flex md:space-x-2">
+                        <a href="{% url 'dashboard:home' %}" 
+                           class="{% if request.resolver_match.url_name == 'home' %}bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg{% else %}text-gray-600 hover:text-gray-900 hover:bg-white/50{% endif %} inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover-lift">
+                            <i class="fas fa-home mr-2"></i>Dashboard
+                        </a>
+                        
+                        <a href="{% url 'assignments:list' %}" 
+                           class="{% if 'assignments' in request.resolver_match.namespace %}bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg{% else %}text-gray-600 hover:text-gray-900 hover:bg-white/50{% endif %} inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover-lift">
+                            <i class="fas fa-tasks mr-2"></i>Assignments
+                        </a>
+                        
+                        {% if user.is_student %}
+                        <a href="{% url 'assignments:my_submissions' %}" 
+                           class="text-gray-600 hover:text-gray-900 hover:bg-white/50 inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover-lift">
+                            <i class="fas fa-file-alt mr-2"></i>My Submissions
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.is_admin or user.is_manager %}
+                        <a href="{% url 'accounts:user_list' %}" 
+                           class="{% if 'accounts' in request.resolver_match.namespace and 'user_list' in request.resolver_match.url_name %}bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg{% else %}text-gray-600 hover:text-gray-900 hover:bg-white/50{% endif %} inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover-lift">
+                            <i class="fas fa-users mr-2"></i>Users
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right side -->
+                <div class="flex items-center space-x-6">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <a href="{% url 'dashboard:notifications' %}" class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-white/50 rounded-xl transition-all duration-200 hover-lift">
+                            <i class="fas fa-bell text-lg"></i>
+                            {% with unread_count=user.notifications.unread.count %}
+                            {% if unread_count > 0 %}
+                            <span class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-lg animate-pulse">
+                                {{ unread_count }}
+                            </span>
+                            {% endif %}
+                            {% endwith %}
+                        </a>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="profile-dropdown">
+                        <button class="flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 hover:bg-white/50 px-4 py-2 rounded-xl hover-lift">
+                            {% if user.profile_picture %}
+                            <img class="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-lg" src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}">
+                            {% else %}
+                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                                {{ user.first_name.0|default:user.username.0|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="ml-3 text-left">
+                                <div class="text-sm font-semibold text-gray-900">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="text-xs text-gray-500">{{ user.get_role_display }}</div>
+                            </div>
+                            <i class="fas fa-chevron-down ml-2 text-gray-400 transition-transform duration-200"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="profile-dropdown-menu">
+                            <div class="px-4 py-3 text-sm text-gray-500 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                                <div class="font-medium text-gray-900">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="text-xs">{{ user.get_role_display }}</div>
+                            </div>
+                            <a href="{% url 'accounts:profile' %}" class="profile-dropdown-item">
+                                <i class="fas fa-user mr-3 text-purple-500"></i>Profile
+                            </a>
+                            <a href="{% url 'accounts:profile_update' %}" class="profile-dropdown-item">
+                                <i class="fas fa-edit mr-3 text-purple-500"></i>Edit Profile
+                            </a>
+                            {% if user.role != 'admin' %}
+                            <a href="{% url 'accounts:setup_profile' %}" class="profile-dropdown-item">
+                                <i class="fas fa-cog mr-3 text-purple-500"></i>Setup Profile
+                            </a>
+                            {% endif %}
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="{% url 'accounts:logout' %}" class="profile-dropdown-item text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-3 text-red-500"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div class="md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="{% url 'dashboard:home' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </a>
+                <a href="{% url 'assignments:list' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-tasks mr-2"></i>Assignments
+                </a>
+                {% if user.is_student %}
+                <a href="{% url 'assignments:my_submissions' %}" class="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                    <i class="fas fa-file-alt mr-2"></i>My Submissions
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mb-4 p-4 rounded-md {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %}">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    {% if message.tags == 'error' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {% elif message.tags == 'success' %}
+                    <i class="fas fa-check-circle"></i>
+                    {% else %}
+                    <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3">
+                    {{ message }}
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-gray-500 text-sm">
+                © 2024 Student Dashboard. Built with Django & Tailwind CSS.
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Enhanced Form Validation and UX JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced form validation
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    const requiredFields = form.querySelectorAll('[required]');
+                    
+                    requiredFields.forEach(field => {
+                        const fieldContainer = field.closest('.form-field');
+                        const existingError = fieldContainer?.querySelector('.field-error');
+                        
+                        // Remove existing error messages
+                        if (existingError && !existingError.textContent.includes('This field is required')) {
+                            existingError.remove();
+                        }
+                        
+                        if (!field.value.trim()) {
+                            isValid = false;
+                            field.classList.add('is-invalid', 'shake');
+                            field.classList.remove('is-valid');
+                            
+                            // Add error message if not exists
+                            if (fieldContainer && !fieldContainer.querySelector('.field-error')) {
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'field-error';
+                                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>This field is required.';
+                                field.parentNode.insertAdjacentElement('afterend', errorDiv);
+                            }
+                            
+                            // Remove shake animation after it completes
+                            setTimeout(() => {
+                                field.classList.remove('shake');
+                            }, 500);
+                        } else {
+                            field.classList.remove('is-invalid');
+                            field.classList.add('is-valid');
+                            
+                            // Remove error message for this field
+                            const errorDiv = fieldContainer?.querySelector('.field-error');
+                            if (errorDiv && errorDiv.textContent.includes('This field is required')) {
+                                errorDiv.remove();
+                            }
+                        }
+                    });
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        
+                        // Scroll to first error
+                        const firstError = form.querySelector('.is-invalid');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.focus();
+                        }
+                        
+                        // Show notification
+                        showNotification('Please fill in all required fields.', 'error');
+                    }
+                });
+                
+                // Real-time validation
+                const inputs = form.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', function() {
+                        if (this.hasAttribute('required')) {
+                            const fieldContainer = this.closest('.form-field');
+                            const errorDiv = fieldContainer?.querySelector('.field-error');
+                            
+                            if (!this.value.trim()) {
+                                this.classList.add('is-invalid');
+                                this.classList.remove('is-valid');
+                                
+                                if (fieldContainer && !errorDiv) {
+                                    const newErrorDiv = document.createElement('div');
+                                    newErrorDiv.className = 'field-error';
+                                    newErrorDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>This field is required.';
+                                    this.parentNode.insertAdjacentElement('afterend', newErrorDiv);
+                                }
+                            } else {
+                                this.classList.remove('is-invalid');
+                                this.classList.add('is-valid');
+                                
+                                if (errorDiv && errorDiv.textContent.includes('This field is required')) {
+                                    errorDiv.remove();
+                                }
+                            }
+                        }
+                    });
+                    
+                    input.addEventListener('input', function() {
+                        if (this.value.trim() && this.hasAttribute('required')) {
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                            
+                            const fieldContainer = this.closest('.form-field');
+                            const errorDiv = fieldContainer?.querySelector('.field-error');
+                            if (errorDiv && errorDiv.textContent.includes('This field is required')) {
+                                errorDiv.remove();
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Enhanced file upload
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                const uploadArea = input.closest('.file-upload-area');
+                if (uploadArea) {
+                    // Drag and drop functionality
+                    uploadArea.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        this.classList.add('border-purple-500', 'bg-purple-50');
+                    });
+                    
+                    uploadArea.addEventListener('dragleave', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('border-purple-500', 'bg-purple-50');
+                    });
+                    
+                    uploadArea.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('border-purple-500', 'bg-purple-50');
+                        
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            input.files = files;
+                            updateFileDisplay(input, files[0]);
+                        }
+                    });
+                    
+                    input.addEventListener('change', function() {
+                        if (this.files.length > 0) {
+                            updateFileDisplay(this, this.files[0]);
+                        }
+                    });
+                }
+            });
+            
+            function updateFileDisplay(input, file) {
+                const uploadArea = input.closest('.file-upload-area');
+                if (uploadArea) {
+                    const label = uploadArea.querySelector('label');
+                    if (label) {
+                        label.innerHTML = `
+                            <div class="flex items-center justify-center">
+                                <i class="fas fa-file mr-2 text-green-500"></i>
+                                <span class="text-green-600 font-medium">${file.name}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">${formatFileSize(file.size)}</p>
+                        `;
+                    }
+                }
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Notification system
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg max-w-sm transform translate-x-full transition-transform duration-300 ${getNotificationClasses(type)}`;
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas ${getNotificationIcon(type)} mr-3"></i>
+                        <span>${message}</span>
+                        <button class="ml-auto text-current opacity-70 hover:opacity-100" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Animate in
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => notification.remove(), 300);
+                }, 5000);
+            }
+            
+            function getNotificationClasses(type) {
+                const classes = {
+                    'success': 'bg-green-100 text-green-800 border border-green-200',
+                    'error': 'bg-red-100 text-red-800 border border-red-200',
+                    'warning': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                    'info': 'bg-blue-100 text-blue-800 border border-blue-200'
+                };
+                return classes[type] || classes.info;
+            }
+            
+            function getNotificationIcon(type) {
+                const icons = {
+                    'success': 'fa-check-circle',
+                    'error': 'fa-exclamation-circle',
+                    'warning': 'fa-exclamation-triangle',
+                    'info': 'fa-info-circle'
+                };
+                return icons[type] || icons.info;
+            }
+            
+            // Make showNotification globally available
+            window.showNotification = showNotification;
+            
+            // Modern Profile Dropdown - CSS Only (no JavaScript needed)
+            // The dropdown now works purely with CSS :hover pseudo-class
+            console.log('Profile dropdown initialized with CSS-only hover');
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

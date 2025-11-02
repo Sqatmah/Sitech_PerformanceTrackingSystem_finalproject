@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ assignment.title }} - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                    <h1 class="text-2xl font-bold text-gray-900">{{ assignment.title }}</h1>
+                    <span class="badge badge-{{ assignment.priority }}">{{ assignment.get_priority_display }}</span>
+                    <span class="badge badge-{{ assignment.status }}">{{ assignment.get_status_display }}</span>
+                </div>
+                <div class="flex items-center space-x-6 text-sm text-gray-600">
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar mr-2"></i>
+                        Due: {{ assignment.due_date|date:"M d, Y H:i" }}
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-star mr-2"></i>
+                        Max Score: {{ assignment.max_score }} pts
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        Created by: {{ assignment.created_by.get_full_name|default:assignment.created_by.username }}
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'assignments:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+                {% if user.is_admin or user.is_manager and assignment.created_by == user %}
+                <a href="{% url 'assignments:update' assignment.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Description -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Description</h2>
+                <div class="prose max-w-none">
+                    {{ assignment.description|linebreaks }}
+                </div>
+                
+                {% if assignment.attachment %}
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-md font-medium text-gray-900 mb-2">Attachment</h3>
+                    <a href="{{ assignment.attachment.url }}" 
+                       class="inline-flex items-center text-blue-600 hover:text-blue-800"
+                       target="_blank">
+                        <i class="fas fa-download mr-2"></i>
+                        Download {{ assignment.attachment.name|slice:"10:" }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Student Submission (if student) -->
+            {% if user.is_student %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Your Submission</h2>
+                    {% if not user_submission %}
+                    <a href="{% url 'submissions:create' assignment.pk %}" class="btn btn-primary">
+                        <i class="fas fa-upload mr-2"></i>Submit Assignment
+                    </a>
+                    {% endif %}
+                </div>
+                
+                {% if user_submission %}
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="font-medium text-gray-900">Submitted on {{ user_submission.submitted_at|date:"M d, Y H:i" }}</p>
+                            {% if user_submission.grade %}
+                            <p class="text-sm text-gray-600">Grade: {{ user_submission.grade }}/{{ assignment.max_score }}</p>
+                            {% else %}
+                            <p class="text-sm text-yellow-600">Pending Review</p>
+                            {% endif %}
+                        </div>
+                        {% if not user_submission.grade %}
+                        <a href="{% url 'submissions:update' user_submission.pk %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                            Edit Submission
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="prose max-w-none text-sm">
+                        {{ user_submission.content|linebreaks }}
+                    </div>
+                    
+                    {% if user_submission.attachment %}
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <a href="{{ user_submission.attachment.url }}" 
+                           class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                           target="_blank">
+                            <i class="fas fa-download mr-2"></i>
+                            Download Attachment
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_submission.feedback %}
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <h4 class="font-medium text-gray-900 mb-2">Feedback</h4>
+                        <div class="prose max-w-none text-sm text-gray-700">
+                            {{ user_submission.feedback|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-upload text-4xl mb-4"></i>
+                    <p>No submission yet</p>
+                    <p class="text-sm">Click "Submit Assignment" to get started</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
+                
+                <!-- Add Comment Form -->
+                <form method="post" action="{% url 'assignments:add_comment' assignment.pk %}" class="mb-6">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <textarea name="content" rows="3" 
+                                  class="form-textarea w-full" 
+                                  placeholder="Add a comment..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-comment mr-2"></i>Add Comment
+                    </button>
+                </form>
+                
+                <!-- Comments List -->
+                <div class="space-y-4">
+                    {% for comment in assignment.comments.all %}
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {{ comment.user.first_name.0|default:comment.user.username.0|upper }}
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">{{ comment.user.get_full_name|default:comment.user.username }}</p>
+                                    <p class="text-sm text-gray-500">{{ comment.created_at|date:"M d, Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="prose max-w-none text-sm">
+                            {{ comment.content|linebreaks }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-comments text-4xl mb-4"></i>
+                        <p>No comments yet</p>
+                        <p class="text-sm">Be the first to add a comment</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Assignment Stats -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assignment Stats</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Submissions</span>
+                        <span class="font-medium">{{ assignment.submissions.count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Graded</span>
+                        <span class="font-medium">{{ graded_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Pending</span>
+                        <span class="font-medium">{{ pending_count }}</span>
+                    </div>
+                    {% if average_grade %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Average Grade</span>
+                        <span class="font-medium">{{ average_grade|floatformat:1 }}/{{ assignment.max_score }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Assigned Students -->
+            {% if user.is_admin or user.is_manager %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assigned Students</h3>
+                <div class="space-y-2">
+                    {% for student in assignment.assigned_to.all %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                {{ student.first_name.0|default:student.username.0|upper }}
+                            </div>
+                            <span class="text-sm">{{ student.get_full_name|default:student.username }}</span>
+                        </div>
+                        {% with student_submission=assignment.submissions.all|dictsort:"student"|first %}
+                        {% if student_submission and student_submission.student == student %}
+                        <span class="text-xs text-green-600">Submitted</span>
+                        {% else %}
+                        <span class="text-xs text-gray-400">Pending</span>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No students assigned</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Submissions -->
+            {% if user.is_admin or user.is_manager %}
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Submissions</h3>
+                <div class="space-y-3">
+                    {% for submission in recent_submissions %}
+                    <div class="border-l-4 border-blue-500 pl-3">
+                        <p class="text-sm font-medium">{{ submission.student.get_full_name|default:submission.student.username }}</p>
+                        <p class="text-xs text-gray-500">{{ submission.submitted_at|date:"M d, H:i" }}</p>
+                        <a href="{% url 'submissions:detail' submission.pk %}" class="text-xs text-blue-600 hover:text-blue-800">
+                            View Submission
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500">No submissions yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

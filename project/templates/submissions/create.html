@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit Assignment - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Submit Assignment</h1>
+                <p class="text-gray-600">{{ assignment.title }}</p>
+            </div>
+            <div>
+                <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assignment
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Submission Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">Your Submission</h2>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Content -->
+                    <div class="mb-6">
+                        <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Submission Content <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.content.errors.0 }}</div>
+                        {% endif %}
+                        <p class="text-sm text-gray-500 mt-1">Provide your solution, answer, or explanation</p>
+                    </div>
+
+                    <!-- Attachment -->
+                    <div class="mb-6">
+                        <label for="{{ form.attachment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Attachment (Optional)
+                        </label>
+                        {{ form.attachment }}
+                        {% if form.attachment.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.attachment.errors.0 }}</div>
+                        {% endif %}
+                        <p class="text-sm text-gray-500 mt-1">Upload files related to your submission (code, documents, etc.)</p>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload mr-2"></i>Submit Assignment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assignment Info -->
+        <div class="space-y-6">
+            <!-- Assignment Details -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assignment Details</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <p class="text-gray-900">{{ assignment.title }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Due Date</label>
+                        <p class="text-gray-900">{{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Max Score</label>
+                        <p class="text-gray-900">{{ assignment.max_score }} points</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Priority</label>
+                        <span class="badge badge-{{ assignment.priority }}">{{ assignment.get_priority_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Description -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                <div class="prose max-w-none text-sm">
+                    {{ assignment.description|linebreaks }}
+                </div>
+                
+                {% if assignment.attachment %}
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="font-medium text-gray-900 mb-2">Assignment Files</h4>
+                    <a href="{{ assignment.attachment.url }}" 
+                       class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                       target="_blank">
+                        <i class="fas fa-download mr-2"></i>
+                        Download {{ assignment.attachment.name|slice:"10:" }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Submission Guidelines -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>Submission Guidelines
+                </h3>
+                <ul class="text-sm text-blue-800 space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                        Provide clear and detailed explanations
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                        Include all necessary files and documentation
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                        Submit before the due date
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                        You can edit your submission until it's graded
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

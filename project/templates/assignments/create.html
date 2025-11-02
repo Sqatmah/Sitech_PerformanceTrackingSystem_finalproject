@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Assignment - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Create New Assignment</h1>
+                <p class="text-gray-600">Create a new assignment for students</p>
+            </div>
+            <div>
+                <a href="{% url 'assignments:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assignments
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Title -->
+                <div class="md:col-span-2">
+                    <div class="form-field">
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-heading mr-2 text-purple-500"></i>
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <input type="text" 
+                                   name="{{ form.title.name }}" 
+                                   id="{{ form.title.id_for_label }}" 
+                                   value="{{ form.title.value|default:'' }}"
+                                   class="form-input input-with-icon {% if form.title.errors %}is-invalid shake{% elif form.title.value %}is-valid{% endif %}"
+                                   required
+                                   placeholder="Enter assignment title">
+                        </div>
+                        {% if form.title.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.title.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="md:col-span-2">
+                    <div class="form-field">
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-align-left mr-2 text-purple-500"></i>
+                            Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="{{ form.description.name }}" 
+                                  id="{{ form.description.id_for_label }}" 
+                                  class="form-textarea {% if form.description.errors %}is-invalid shake{% elif form.description.value %}is-valid{% endif %}"
+                                  required
+                                  rows="4"
+                                  placeholder="Provide detailed assignment description">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.description.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Due Date -->
+                <div>
+                    <div class="form-field">
+                        <label for="{{ form.due_date.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-calendar mr-2 text-purple-500"></i>
+                            Due Date <span class="text-red-500">*</span>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <input type="datetime-local" 
+                                   name="{{ form.due_date.name }}" 
+                                   id="{{ form.due_date.id_for_label }}" 
+                                   value="{{ form.due_date.value|default:'' }}"
+                                   class="form-input input-with-icon {% if form.due_date.errors %}is-invalid shake{% elif form.due_date.value %}is-valid{% endif %}"
+                                   required>
+                        </div>
+                        {% if form.due_date.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.due_date.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Max Score -->
+                <div>
+                    <div class="form-field">
+                        <label for="{{ form.max_score.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-star mr-2 text-purple-500"></i>
+                            Max Score <span class="text-red-500">*</span>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <input type="number" 
+                                   name="{{ form.max_score.name }}" 
+                                   id="{{ form.max_score.id_for_label }}" 
+                                   value="{{ form.max_score.value|default:'' }}"
+                                   class="form-input input-with-icon {% if form.max_score.errors %}is-invalid shake{% elif form.max_score.value %}is-valid{% endif %}"
+                                   required
+                                   min="1"
+                                   placeholder="100">
+                        </div>
+                        {% if form.max_score.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.max_score.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="field-help">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Maximum points students can earn for this assignment
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                    <div class="form-field">
+                        <label for="{{ form.priority.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-flag mr-2 text-purple-500"></i>
+                            Priority
+                        </label>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                            <select name="{{ form.priority.name }}" 
+                                    id="{{ form.priority.id_for_label }}" 
+                                    class="form-select input-with-icon {% if form.priority.errors %}is-invalid shake{% elif form.priority.value %}is-valid{% endif %}">
+                                {% for choice in form.priority.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == form.priority.value %}selected{% endif %}>{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if form.priority.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.priority.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <div class="form-field">
+                        <label for="{{ form.status.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-toggle-on mr-2 text-purple-500"></i>
+                            Status
+                        </label>
+                        <div class="input-group">
+                            <div class="input-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <select name="{{ form.status.name }}" 
+                                    id="{{ form.status.id_for_label }}" 
+                                    class="form-select input-with-icon {% if form.status.errors %}is-invalid shake{% elif form.status.value %}is-valid{% endif %}">
+                                {% for choice in form.status.field.choices %}
+                                    <option value="{{ choice.0 }}" {% if choice.0 == form.status.value %}selected{% endif %}>{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if form.status.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.status.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Assigned To -->
+                <div class="md:col-span-2">
+                    <div class="form-field">
+                        <label for="{{ form.assigned_to.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-users mr-2 text-purple-500"></i>
+                            Assign to Students
+                        </label>
+                        <select name="{{ form.assigned_to.name }}" 
+                                id="{{ form.assigned_to.id_for_label }}" 
+                                multiple
+                                class="form-select {% if form.assigned_to.errors %}is-invalid shake{% elif form.assigned_to.value %}is-valid{% endif %}"
+                                style="min-height: 120px;">
+                            {% for choice in form.assigned_to.field.queryset %}
+                                <option value="{{ choice.pk }}" {% if choice.pk in form.assigned_to.value %}selected{% endif %}>
+                                    {{ choice.get_full_name|default:choice.username }} ({{ choice.get_role_display }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.assigned_to.errors %}
+                            <div class="field-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ form.assigned_to.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="field-help">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Hold Ctrl/Cmd to select multiple students
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attachment -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.attachment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Attachment (Optional)
+                    </label>
+                    {{ form.attachment }}
+                    {% if form.attachment.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.attachment.errors.0 }}</div>
+                    {% endif %}
+                    <p class="text-sm text-gray-500 mt-1">Upload assignment files, instructions, or resources</p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                <a href="{% url 'assignments:list' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>Create Assignment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

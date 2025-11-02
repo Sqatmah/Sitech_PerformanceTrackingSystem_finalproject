@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit {{ assignment.title }} - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Edit Assignment</h1>
+                <p class="text-gray-600">Update assignment details</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assignment
+                </a>
+                <a href="{% url 'assignments:list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list mr-2"></i>All Assignments
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignment Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Title -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Title <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Due Date -->
+                <div>
+                    <label for="{{ form.due_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Due Date <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.due_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Max Score -->
+                <div>
+                    <label for="{{ form.max_score.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Max Score <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.max_score }}
+                    {% if form.max_score.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.max_score.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Priority -->
+                <div>
+                    <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Priority
+                    </label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.priority.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.status.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Assigned To -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.assigned_to.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Assign to Students
+                    </label>
+                    {{ form.assigned_to }}
+                    {% if form.assigned_to.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.assigned_to.errors.0 }}</div>
+                    {% endif %}
+                    <p class="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple students</p>
+                </div>
+
+                <!-- Current Attachment -->
+                {% if assignment.attachment %}
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Attachment</label>
+                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <i class="fas fa-file text-gray-400"></i>
+                        <a href="{{ assignment.attachment.url }}" 
+                           class="text-blue-600 hover:text-blue-800"
+                           target="_blank">
+                            {{ assignment.attachment.name|slice:"10:" }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- New Attachment -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.attachment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% if assignment.attachment %}Replace Attachment{% else %}Attachment{% endif %} (Optional)
+                    </label>
+                    {{ form.attachment }}
+                    {% if form.attachment.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.attachment.errors.0 }}</div>
+                    {% endif %}
+                    <p class="text-sm text-gray-500 mt-1">
+                        {% if assignment.attachment %}
+                        Upload a new file to replace the current attachment, or leave empty to keep the current one
+                        {% else %}
+                        Upload assignment files, instructions, or resources
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                <div>
+                    {% if user.is_admin %}
+                    <button type="button" 
+                            onclick="if(confirm('Are you sure you want to delete this assignment? This action cannot be undone.')) { window.location.href='{% url 'assignments:delete' assignment.pk %}'; }"
+                            class="btn btn-danger">
+                        <i class="fas fa-trash mr-2"></i>Delete Assignment
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'assignments:detail' assignment.pk %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Update Assignment
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
