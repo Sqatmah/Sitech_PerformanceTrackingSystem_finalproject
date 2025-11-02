@@ -4,6 +4,14 @@ A **comprehensive student performance tracking system** built with **Django (Pyt
 
 ---
 
+## 🧭 Project Overview Diagram
+
+This diagram illustrates the architecture and data flow of the Sitech Performance Tracking System.
+
+![Sitech Architecture](images/architecture_diagram.png)
+
+
+
 ## 🚀 Features
 
 ### 👤 User Management
@@ -101,11 +109,7 @@ Then open:
 - Enhanced role-based permissions.
 
 
-## 🧭 Project Overview Diagram
 
-This diagram illustrates the architecture and data flow of the Sitech Performance Tracking System.
-
-![Sitech Architecture](images/architecture_diagram.png)
 
 
 
@@ -130,6 +134,7 @@ This project is licensed under the MIT License — feel free to use and modify f
 
 
 ⭐ If you like this project, don’t forget to star the repository on GitHub!
+
 
 
 
